@@ -84,6 +84,26 @@ module {
       };
       case null { t.check(false, "side tractor lead classifiable") };
     };
+    // A throw of nothing but singles has no pair and no tractor to answer, so the
+    // length is all the kill has to match: three cards led, three trumps ruffed.
+    switch (Combo.determineLeadType(CardParse.parse(["♦10", "♦9", "♦8"]), { level = 2; trump = H })) {
+      case (?lead) {
+        let g : Card.Game = { level = 2; trump = H };
+        t.check(
+          Trick.isValidKill(CardParse.parse(["♥A", "♥Q", "♥J"]), lead, g),
+          "three trumps kill a three-card throw of singles",
+        );
+        t.check(
+          not Trick.isValidKill(CardParse.parse(["♥A", "♥Q", "♦K"]), lead, g),
+          "two trumps and a side card do not kill it",
+        );
+        t.check(
+          not Trick.isValidKill(CardParse.parse(["♥A", "♥Q"]), lead, g),
+          "a short ruff is not a kill",
+        );
+      };
+      case null { t.check(false, "three-single throw classifiable") };
+    };
     switch (Combo.determineLeadType(CardParse.parse(["♥2", "♥2"]), { level = 2; trump = Card.NT })) {
       case (?lead) {
         let g : Card.Game = { level = 2; trump = Card.NT };

@@ -13,6 +13,7 @@
 import Array "mo:core/Array";
 import List "mo:core/List";
 import Nat "mo:core/Nat";
+import Text "mo:core/Text";
 import VarArray "mo:core/VarArray";
 import Util "Util";
 
@@ -415,5 +416,18 @@ module {
       if (not removed) { out.add(c) };
     };
     out.toArray();
+  };
+
+  /// The cards as one line of names (`♠A, ♠10, 🃏`), in the order given. Two
+  /// copies of a card read the same: the deck holds two, and the name is the face.
+  public func cardLine(cards : [Card]) : Text {
+    Text.join(Array.map<Card, Text>(cards, cardToString).vals(), ", ");
+  };
+
+  /// A hand as one line of names, in the order `sortPlay` shows it to a player:
+  /// trumps first, then each side suit, each by descending rank. What a driver
+  /// prints when it says what a bot was holding.
+  public func handLine(hand : [Card], game : Game) : Text {
+    cardLine(sortPlay(hand, game));
   };
 }

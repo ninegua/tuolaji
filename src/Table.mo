@@ -1687,14 +1687,15 @@ module {
     if (isFollow) {
       switch (st.lead) {
         case (?lead) {
-          // A follower is void in the lead category only when they played
-          // none of it. A pair lead answered with one card of the suit plus an
-          // off-suit card does not exhaust the suit.
-          var followed = false;
+          // R2 owes `min(H, N)` cards of the lead suit, so a follow shorter
+          // than the trick's length proves the suit ran out: a pair lead
+          // answered with one card of the suit plus an off-suit card leaves the
+          // seat void in it.
+          var followed = 0;
           for (c in played.vals()) {
-            if (Card.category(c, game) == lead.category) { followed := true };
+            if (Card.category(c, game) == lead.category) { followed += 1 };
           };
-          if (not followed) { st.voids := Basic.markVoid(st.voids, s, lead.category) };
+          if (followed < lead.count) { st.voids := Basic.markVoid(st.voids, s, lead.category) };
         };
         case null {};
       };

@@ -63,6 +63,31 @@ module {
     expect(t, "throw follow - tractor pairs count", true, legal(2, H, ["♠A", "♠K", "♠10", "♠A", "♠10"], ["♠4", "♠4", "♠5", "♠5", "♠8", "♠8", "♠9", "♠3"], ["♠4", "♠4", "♠5", "♠5", "♠3"]));
     expect(t, "throw follow - not enough pair-equivalents", false, legal(2, H, ["♠A", "♠K", "♠10", "♠A", "♠10"], ["♠4", "♠4", "♠5", "♠5", "♠8", "♠8", "♠9", "♠3"], ["♠8", "♠8", "♠9", "♠3", "♠4"]));
 
+    // ── a kill is the lead's whole length, so one owed card rules it out ──
+    // `tractor-A40-deal-21.json` T15: hearts (the 6s level) are trump, and ♦10 ♦9 ♦8
+    // is a throw of three singles. This hand holds five trumps and one diamond, so
+    // three trumps *would* be a valid kill — and it is not a legal play: R3 owes the
+    // ♦5 (`min(H, N)`) and a kill must be all trump, so the ruff is out of reach and
+    // the hand follows, dumps two trumps and watches the trick go.
+    expect(
+      t,
+      "throw kill - three trumps with the suit void",
+      true,
+      legal(6, H, ["♦10", "♦9", "♦8"], ["♥A", "♥Q", "♥J", "♥9", "♠6", "♣4"], ["♥A", "♥Q", "♥J"]),
+    );
+    expect(
+      t,
+      "throw kill - one owed card, the trumps kept",
+      true,
+      legal(6, H, ["♦10", "♦9", "♦8"], ["♥A", "♥Q", "♥J", "♥9", "♦5", "♠6"], ["♦5", "♥9", "♥J"]),
+    );
+    expect(
+      t,
+      "throw kill - three trumps over an owed card",
+      false,
+      legal(6, H, ["♦10", "♦9", "♦8"], ["♥A", "♥Q", "♥J", "♥9", "♦5", "♠6"], ["♥A", "♥Q", "♥J"]),
+    );
+
     // off-suit level cards do not pair
     expect(t, "pair follow - fake off-suit level pair is illegal", false, legal(11, H, ["♥K", "♥K"], ["♣J", "♦J", "♥A", "♥A"], ["♣J", "♦J"]));
     expect(t, "pair follow - real pair is legal", true, legal(11, H, ["♥K", "♥K"], ["♣J", "♦J", "♥A", "♥A"], ["♥A", "♥A"]));

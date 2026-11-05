@@ -216,12 +216,37 @@ module {
     t.equalNat(mixed[4], c4, "clubs sort last");
   };
 
+  /// The lines a driver prints: `cardLine` names the cards it is given, and
+  /// `handLine` names a hand in the order `sortPlay` shows it to a player — the
+  /// order a reader has to be able to read a hand off of, so a debug print of
+  /// `🃏, ♥10, ♦3, ♠A, ♣5` says what the boss cards are at a glance.
+  func t1_cardLine(t : Test.Harness) {
+    t.suite("cardLine / handLine");
+    let game : Card.Game = { level = 10; trump = 4 }; // tens are level, ♦ trumps
+    t.equalText(Card.cardLine([45, 4]), "♠A, ♦3", "cardLine names the cards, in the order given");
+    t.equalText(Card.cardLine([]), "", "an empty hand is an empty line");
+    // 🃏 the boss, then ♥10 (a level card is a trump whatever suit it is worn in),
+    // then ♦3 (a trump of the lowest rank), then the side suits ♠ before ♣.
+    t.equalText(
+      Card.handLine([45, 4, 30, 11, 106], game),
+      "🃏, ♥10, ♦3, ♠A, ♣5",
+      "handLine sorts trumps first, then each side suit by descending rank",
+    );
+    t.equalText(
+      Card.handLine([45, 4, 30, 11, 106], game),
+      Card.cardLine(Card.sortPlay([45, 4, 30, 11, 106], game)),
+      "handLine is `sortPlay`, named — one order, two spellings",
+    );
+    t.equalText(Card.handLine([], game), "", "an empty hand lines up as nothing");
+  };
+
   public func run(t : Test.Harness) {
     t1_encoding(t);
     t1_trumpAndCategory(t);
     t1_rankValue(t);
     t1_pairKey(t);
     t1_sortPlay(t);
+    t1_cardLine(t);
     t9_encodingLock(t);
   };
 }
