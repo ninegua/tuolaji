@@ -1584,8 +1584,12 @@ module {
     // The deal was played at the current banking team's level. Advancing that
     // team is what "wins" the levels; a takeover moves the bank to the other
     // partnership without touching the first team's level.
-    let playedLevel = st.level;
     let bt = bankTeamOf(st);
+    let winnerTeam = switch (outcome.winner) {
+      case (#Bankers) { bt };
+      case (#Attackers) { otherTeam(bt) };
+    };
+    let winnerLevelBefore = st.teamLevel[winnerTeam];
     switch (outcome.winner) {
       case (#Bankers) {
         st.teamLevel[bt] := Scoring.advanceLevel(st.teamLevel[bt], outcome);
@@ -1605,13 +1609,15 @@ module {
     // (see `beginDeal`). So the dealer now follows the bank rather than the
     // seat order, and a takeover moves the dealer with the bank.
     let nextDealer = switch (upcomingBanker(st)) { case (?b) { b }; case null { st.dealer } };
-    // The deal was played at the bankers' pre-deal level. Only winning *while
-    // already at `targetLevel` completes the epoch; reaching A from K merely
-    // queues the A deal. On completion only the winning partnership advances:
-    // its epoch increments and its level wraps past A by the levels gained
-    // this deal, so a 0-point hold at A starts the next epoch at 4. The other
+    // Any gain that carries the winner past A overflows into the next epoch;
+    // a win at the configured target also completes it (so a lower targetLevel
+    // still wraps there). On completion only the winning partnership advances:
+    // its epoch increments and its level wraps past A by the levels gained this
+    // deal. A takeover with no level gain stays at A instead. The other
     // partnership keeps its own epoch and level.
-    let reachedTarget = outcome.winner == #Bankers and playedLevel >= st.cfg.targetLevel;
+    let overflowed = winnerLevelBefore + outcome.gain > Scoring.MAX_LEVEL;
+    let completedEpoch =
+      overflowed or (winnerLevelBefore >= st.cfg.targetLevel and outcome.gain > 0);
     ignore append(st, now, #DealScored({
       attackerPoints = st.attackerPoints;
       result = { points = outcome.points; winner = outcome.winner; gain = outcome.gain };
@@ -1625,15 +1631,15 @@ module {
       trickId = finalTrickId;
     }));
     st.dealer := nextDealer;
-    if (reachedTarget) {
+    if (completedEpoch) {
       // Only the winning partnership wraps: its epoch advances and its level
-      // continues from the played level by the gained levels, wrapping past A
-      // (A +1 -> 2, +2 -> 3, +3 -> 4). The other partnership keeps its own
-      // epoch and level untouched.
-      let wt = bankTeamOf(st);
+      // continues from its pre-deal level by the gained levels, wrapping past A
+      // (K +2 -> 2, A +1 -> 2, +2 -> 3, +3 -> 4). The other partnership keeps
+      // its own epoch and level untouched.
+      let wt = winnerTeam;
       let finishedEpoch = st.teamEpoch[wt];
       st.teamEpoch[wt] += 1;
-      st.teamLevel[wt] := Scoring.nextEpochLevel(playedLevel, outcome.gain);
+      st.teamLevel[wt] := Scoring.nextEpochLevel(winnerLevelBefore, outcome.gain);
       st.level := st.teamLevel[wt];
       ignore append(st, now, #EpochEnded({ winner = outcome.winner; epoch = finishedEpoch }));
     };

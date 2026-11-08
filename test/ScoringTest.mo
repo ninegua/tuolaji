@@ -51,12 +51,20 @@ module {
     t.equalNat(Scoring.pointsOf(CardParse.parse(["♠5", "♠10", "♠K"])) * 4, 100, "kitty ×4");
     t.equalNat(Scoring.pointsOf(CardParse.parse(["♠5", "♠10", "♠K"])) * 8, 200, "kitty ×8");
 
-    // gained-level progression, capped at A
+    // gained-level progression: any gain past A overflows into the next epoch
     t.equalNat(Scoring.advanceLevel(9, Scoring.compute(10)), 11, "banker 9 +2 -> J");
     t.equalNat(Scoring.advanceLevel(10, Scoring.compute(0)), 13, "banker 10 +3 -> K");
     t.equalNat(Scoring.advanceLevel(9, Scoring.compute(200)), 12, "attacker 9 +3 -> Q");
-    t.equalNat(Scoring.advanceLevel(12, Scoring.compute(200)), 14, "13/14 capped at A");
+    t.equalNat(Scoring.advanceLevel(11, Scoring.compute(200)), 14, "J +3 -> A");
+    t.equalNat(Scoring.advanceLevel(12, Scoring.compute(200)), 2, "Q +3 overflows to 2");
+    t.equalNat(Scoring.advanceLevel(13, Scoring.compute(120)), 14, "K +1 -> A");
+    t.equalNat(Scoring.advanceLevel(13, Scoring.compute(160)), 2, "K +2 overflows to 2");
+    t.equalNat(Scoring.advanceLevel(13, Scoring.compute(200)), 3, "K +3 overflows to 3");
     t.equalNat(Scoring.advanceLevel(9, Scoring.compute(50)), 10, "banker 9 +1 -> 10");
+    t.equalNat(Scoring.advanceLevel(14, Scoring.compute(80)), 14, "A +0 stays at A");
+    t.equalNat(Scoring.advanceLevel(14, Scoring.compute(120)), 2, "A +1 overflows to 2");
+    t.equalNat(Scoring.advanceLevel(14, Scoring.compute(160)), 3, "A +2 overflows to 3");
+    t.equalNat(Scoring.advanceLevel(14, Scoring.compute(200)), 4, "A +3 overflows to 4");
 
     // epoch wrap: the gained levels continue past A around the 2..A ladder
     t.equalNat(Scoring.nextEpochLevel(14, 1), 2, "A +1 wraps to 2");

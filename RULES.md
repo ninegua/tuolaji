@@ -187,7 +187,9 @@ Let `P` be the attacking team's points (trick points plus any kitty scoop).
   points are added to `P`, multiplied by the final lead's structure: **×8** if
   it contains a tractor, otherwise **×4** if it contains a pair, otherwise
   **×2** (pure singles).
-- A team's level never exceeds **A**; advancing past A caps at A.
+- A win whose gained levels would carry a team past **A** overflows into the
+  next epoch, regardless of the team's current level. The ladder wraps:
+  K +2 → 2, A +1 → 2, A +2 → 3, and A +3 → 4.
 - The winning team banks the next deal: if the banking team holds it keeps the
   bank; if the attackers win they become the banking team.
 
@@ -211,11 +213,12 @@ Let `P` be the attacking team's points (trick points plus any kitty scoop).
 ## 12. Epochs
 
 - The target level is **A**.
-- A partnership completes an **epoch** when it wins a deal as the banking team
-  while that deal was played at level A.
+- A partnership completes an **epoch** when a win's gained levels would carry
+  it past A. Taking the bank as the attackers counts just like defending it as
+  the bankers.
 - On completion, that partnership's epoch count increases and its level wraps
-  past A by the levels it would have gained (so +1 restarts at 2, +2 at 3, and
-  +3 at 4). The other partnership keeps its own epoch and level.
+  past A by the levels it gained (so K +2 restarts at 2, and A +1 / +2 / +3 at
+  2 / 3 / 4). The other partnership keeps its own epoch and level.
 - Completing an epoch is reported but does **not** end the table; play
   continues until the players leave.
 

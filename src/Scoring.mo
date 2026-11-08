@@ -2,7 +2,8 @@
 ///
 /// `compute` and `kittyMultiplier` are ported from `simulator.js`
 /// (`computeResult` / `kittyMultiplier`). Level progression awards the full
-/// gained levels (1/2/3 by the attackers' points), capped at A.
+/// gained levels (1/2/3 by the attackers' points); any gain that would carry a
+/// team past A overflows into the next epoch.
 import Card "Card";
 import Nat "mo:core/Nat";
 import Combo "Combo";
@@ -58,16 +59,22 @@ module {
     sum;
   };
 
-  /// The winning team's new level after the levels gained (RULES.md §4:
-  /// 1/2/3 by the attackers' points), capped at A so a win never skips past A.
+  /// The winning team's new level after the levels gained (RULES.md §10:
+  /// 1/2/3 by the attackers' points). Any gain that would carry the team past
+  /// A overflows into the next epoch: the ladder wraps, so K + 2 -> 2,
+  /// A + 1 -> 2, A + 2 -> 3, and A + 3 -> 4 (RULES.md §12).
   public func advanceLevel(currentLevel : Nat, outcome : Outcome) : Nat {
     let raw = currentLevel + outcome.gain;
-    if (raw > MAX_LEVEL) { MAX_LEVEL } else { raw };
+    if (raw > MAX_LEVEL) {
+      nextEpochLevel(currentLevel, outcome.gain)
+    } else {
+      raw
+    };
   };
 
   /// The level a partnership restarts the next epoch at after winning a deal
-  /// played at `playedLevel`: the gained levels wrap around the 2..A ladder, so
-  /// a +1 hold at A restarts at 2, +2 at 3, and +3 at 4 (RULES.md §12).
+  /// at `playedLevel`: the gained levels wrap around the 2..A ladder, so
+  /// K +2 restarts at 2, and A +1/+2/+3 at 2/3/4 (RULES.md §12).
   public func nextEpochLevel(playedLevel : Nat, gain : Nat) : Nat {
     // Levels run 2..A, so there are 13 rungs; `+ 11` is `- 2 (mod 13)`, which
     // shifts into 0-based before wrapping and avoids a runtime Nat subtraction.
